@@ -15,13 +15,12 @@ class tokenApi
      * @return string
      */
     static public final function createToken($userId){
-        $tokenArr = cache('token')?json_encode(cache('token')):[];
+        $tokenArr = cache('token')?json_decode(cache('token'),true):[];
         $toekn = md5($userId . time() . rand(1000,9999));
         $tokenArr[] = [
-            $toekn=>[
-                'time'=>time(),
-                'userId'=>$userId
-            ]
+            'time'=>time(),
+            'userId'=>$userId,
+            'token'=>$toekn
         ];
         cache('token',json_encode($tokenArr));
         return $toekn;
@@ -37,28 +36,22 @@ class tokenApi
         if(!$tokenArr){
             return false;
         }
-        $key = 0;
-        $tokenTemp = [];
-        foreach ($tokenArr as $k => $v){
-            if(isset($v[$token])){
-                $key = $k;
-                $tokenTemp = $v[$token];
-            }
-        }
-        if(!$tokenTemp){
+
+        $tokenArrTemp = array_column($tokenArr,null,'token');
+        if(!isset($tokenArrTemp[$token])){
             //无效token
             return false;
         }
 
-        if(time() - $tokenTemp['time'] > self::EXPIRATIONTIME){
+        if(time() - $tokenArrTemp[$token]['time'] > self::EXPIRATIONTIME){
             //token已过期
             return false;
         }
+        $userId = $tokenArrTemp[$token]['userId'];
 
         //如果token在有效期内，则刷新time，并返回userId
-        $tokenTemp['time'] = time();
-        $tokenArr[$key][$token] = $tokenTemp;
-        cache('token',json_encode($tokenArr));
-        return $tokenTemp['userId'];
+        $tokenArrTemp[$token]['time'] = time();
+        cache('token',json_encode(array_values($tokenArrTemp)));
+        return $userId;
     }
 }
