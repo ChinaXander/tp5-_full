@@ -10,3 +10,17 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
+
+/**
+ * 响应数据格式化
+ * @param int $code
+ * @param array $data
+ * @param string $msg
+ * @return false|string
+ */
+function responseJson($code=200,$data=[],$msg='success'){
+    $res['code'] = $code;
+    $res['data'] = $data;
+    $res['msg'] = $msg;
+    return json_encode($res);
+}
